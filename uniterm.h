@@ -48,5 +48,7 @@ int comando_mudadir(char * nome_dir);
 
 int lancar_programa(char * nome_prog, char * parametros);
 
+struct dirent *arquivos();
+
 #endif
 

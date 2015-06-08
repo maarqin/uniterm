@@ -13,6 +13,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 const int TAMANHO_COMANDO = 21;
 const int TAMANHO_PARAMETROS = 201;
@@ -32,8 +33,8 @@ void digitar_prompt() {
     uid_t uid = geteuid();
     struct passwd *pw = getpwuid(uid);
     char *dir = getwd(NULL);
-    
-    printf("%d:%s@%s > ", pw->pw_uid, pw->pw_name, dir);    
+
+    printf("%d:%s@%s > ", pw->pw_uid, pw->pw_name, dir);
 }
 
 void ler_comando(char * comando, char * parametros) {
@@ -69,26 +70,26 @@ void ler_comando(char * comando, char * parametros) {
 
 void executar_comando(char * comando, char * parametros) {
     int cod_erro = 0;
-    
+
     if (strcmp(comando, "terminar") == 0) {
         cod_erro = comando_terminar();
     } else if (strcmp(comando, "datahora") == 0) {
         cod_erro = comando_datahora();
     } else if (strcmp(comando, "arquivos") == 0) {
         cod_erro = comando_arquivos();
-    } else if ( strcmp(comando, "novodir") == 0 ) {
+    } else if (strcmp(comando, "novodir") == 0) {
         cod_erro = comando_novodir(parametros);
-    } else if ( strcmp(comando, "apagadir") == 0 ) {
+    } else if (strcmp(comando, "apagadir") == 0) {
         cod_erro = comando_apagadir(parametros);
-    } else if ( strcmp(comando, "mudadir") == 0 ) {
+    } else if (strcmp(comando, "mudadir") == 0) {
         cod_erro = comando_mudadir(parametros);
-    } else if ( strcmp(comando, "limpar") == 0 ) {
-        system("clear");
-    } else if( strcmp(comando, "") != 0 ) {
-        printf("-uniterm: %s: Comando não encontrado\n", comando);
+    } else {
+        cod_erro = lancar_programa(comando, parametros);
     }
     /* Outros comandos continuam aqui, similares aos acima */
 }
+
+// Verificar
 
 int comando_terminar() {
     printf("Good bye.\n");
@@ -106,7 +107,7 @@ int comando_datahora() {
     t = time(NULL);
     tmp = localtime(&t);
 
-    strftime(resultado, sizeof (resultado), "%d/%m/%Y às %H:%M", tmp);
+    strftime(resultado, sizeof (resultado), "São %H:%M de %d/%m/%Y", tmp);
 
     printf("%s\n", resultado);
 
@@ -115,21 +116,23 @@ int comando_datahora() {
 
 int comando_arquivos() {
 
-    struct dirent **namelist;
+    struct dirent **arquivos;
     int n;
 
-    n = scandir(".", &namelist, NULL, alphasort);
+    n = scandir(".", &arquivos, NULL, alphasort);
     if (n < 0)
         perror("scandir");
     else {
         while (n--) {
-            printf("%s\n", namelist[n]->d_name);
+            printf("%s\n", arquivos[n]->d_name);
         }
-        free(namelist);
+        free(arquivos);
     }
 
     return 0;
 }
+
+// Verificar
 
 int comando_novodir(char * nome_dir) {
 
@@ -139,7 +142,7 @@ int comando_novodir(char * nome_dir) {
 }
 
 int comando_apagadir(char * nome_dir) {
-    
+
     rmdir(nome_dir);
     return 0;
 }
@@ -151,7 +154,40 @@ int comando_mudadir(char * nome_dir) {
 }
 
 int lancar_programa(char * nome_prog, char * parametros) {
-    printf("Funcionalidade ainda nao implementada pelo aluno.");
+
+    int result;
+    const char *nome = nome_prog;
+    result = access(nome, F_OK);
+    if (result < 0) {
+        printf("Comando ou programa '%s' inexistente.\n", nome_prog);
+        return 1;
+    } else if (result == 0) {
+        result = access(nome, X_OK);
+        if (result < 0) {
+            printf("Arquivo '%s' não tem permissão para execução.\n", nome_prog);
+            return 1;
+        } else if (result == 0) {
+            pid_t pid = fork();
+            int status;
+            if (pid < 0) {
+                perror("fork() falhou\n");
+                return 1;
+            }
+
+            // fatal matar o processo filho, pegar o valor do retorno e executar
+            // outros programas
+
+            if (pid == 0) {
+                execv(nome_prog, NULL);
+            } else {
+                waitpid(pid, &status, 0);
+            }
+
+            return 0;
+        }
+    }
+
     return 1;
 }
+
 
