@@ -154,11 +154,40 @@ int lancar_programa(char * nome_prog, char * parametros) {
     int result;
     const char *nome = nome_prog;
     result = access(nome, F_OK);
-    if (result < 0) {
+    
+    struct dirent **arquivos;
+    bool isFound = false;
+    if( result < 0 ){
+        
+        char *path_command[TAMANHO_COMANDO];
+        // For searching in /bin others programs
+        *path_command = "/bin/";
+        result = scandir(*path_command, &arquivos, NULL, alphasort);
+        while (result-- && !isFound) {
+            if( strcmp(arquivos[result]->d_name, 
+                    nome_prog) == 0 ) isFound = true;
+        }
+        
+        // For searching in /usr/bin others programs
+        if( !isFound ){
+            *path_command = "/usr/bin/";
+            result = scandir(*path_command, &arquivos, NULL, alphasort);
+            while (result-- && !isFound) { 
+                if( strcmp(arquivos[result]->d_name, 
+                        nome_prog) == 0 ) isFound = true;
+            }
+        }
+        // If commando found in any dir
+        result = ( isFound ) ? 0 : -1;
+    }
+        
+    if (result < 0 && !isFound) {        
         printf("Comando ou programa '%s' inexistente.\n", nome_prog);
         return 1;
     } else if (result == 0) {
-        result = access(nome, X_OK);
+        if( !isFound )
+            result = access(nome, X_OK);
+        
         if (result < 0) {
             printf("Arquivo '%s' não tem permissão para execução.\n", nome_prog);
             return 1;
@@ -171,13 +200,17 @@ int lancar_programa(char * nome_prog, char * parametros) {
             }
             
             // Executar outros programas
-
             if (pid == 0) {
-                execv(nome_prog, NULL);
+                if( isFound ){
+                    execlp(nome, nome, parametros);
+                } else {
+                    execv(nome_prog, NULL);
+                }
             } else {
                 waitpid(pid, &status, 0);
-                if( status > 0 ){
-                    printf("ERRO: o programa indicou termino com falha!\n");
+                if( status > 0 ){ 
+                    // Corrigir o finalizar
+                    //printf("ERRO: o programa indicou termino com falha!\n");
                 }
             }
 
