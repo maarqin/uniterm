@@ -89,8 +89,6 @@ void executar_comando(char * comando, char * parametros) {
     /* Outros comandos continuam aqui, similares aos acima */
 }
 
-// Verificar
-
 int comando_terminar() {
     printf("Good bye.\n");
     pid_t pid = getpid();
@@ -132,8 +130,6 @@ int comando_arquivos() {
     return 0;
 }
 
-// Verificar
-
 int comando_novodir(char * nome_dir) {
 
     mode_t permission = 0777;
@@ -173,14 +169,16 @@ int lancar_programa(char * nome_prog, char * parametros) {
                 perror("fork() falhou\n");
                 return 1;
             }
-
-            // fatal matar o processo filho, pegar o valor do retorno e executar
-            // outros programas
+            
+            // Executar outros programas
 
             if (pid == 0) {
                 execv(nome_prog, NULL);
             } else {
                 waitpid(pid, &status, 0);
+                if( status > 0 ){
+                    printf("ERRO: o programa indicou termino com falha!\n");
+                }
             }
 
             return 0;
