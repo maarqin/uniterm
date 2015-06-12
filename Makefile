@@ -13,7 +13,7 @@
 CC=clang
 
 #Para nao silenciar os warnings
-CFLAGS= -Wall
+CFLAGS= -Werror -Wall
 
 #OBJS guarda todos os meus objects .o
 OBJS = main.o uniterm.o
@@ -21,12 +21,12 @@ OBJS_HW = ola_mundo.o
 OBJS_BW = adeus_mundo.o
 
 #BIN
-EXEC = main ola_mundo adeus_mundo
+EXEC = uniterm ola_mundo adeus_mundo
 
 all: default ola_mundo adeus_mundo
 
 default: $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o main
+	$(CC) $(CFLAGS) $(OBJS) -o uniterm
 	
 main.o: main.c uniterm.h
 	$(CC) $(CFLAGS) -c main.c

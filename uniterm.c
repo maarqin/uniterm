@@ -39,29 +39,29 @@ void digitar_prompt() {
 
 void ler_comando(char * comando, char * parametros) {
 
-    char cmd_typed[TAMANHO_COMANDO + TAMANHO_PARAMETROS];
+    char typed[TAMANHO_COMANDO + TAMANHO_PARAMETROS];
     char c;
     int x = 0;
     // Reading datas from user
     while ((c = getchar()) != '\n') {
-        cmd_typed[x++] = c;
+        typed[x++] = c;
     }
-    cmd_typed[x] = '\0';
+    typed[x] = '\0';
 
     // Partition between command and params
     int p = 0;
     while ((p < TAMANHO_COMANDO) &&
-            (cmd_typed[p] != ' ')) {
+            (typed[p] != ' ')) {
 
-        comando[p] = cmd_typed[p];
+        comando[p] = typed[p];
         p++;
     }
     comando[p++] = '\0';
 
     int i = 0;
-    while ((i < TAMANHO_PARAMETROS) && (cmd_typed[p] != '\0')) {
+    while ((i < TAMANHO_PARAMETROS) && (typed[p] != '\0')) {
 
-        parametros[i] = cmd_typed[p];
+        parametros[i] = typed[p];
         p++;
         i++;
     }
@@ -133,19 +133,22 @@ int comando_arquivos() {
 int comando_novodir(char * nome_dir) {
 
     mode_t permission = 0777;
-    mkdir(nome_dir, permission);
+    int ret = mkdir(nome_dir, permission);
+    if( ret != 0 ) perror("mkdir");
     return 0;
 }
 
 int comando_apagadir(char * nome_dir) {
-
-    rmdir(nome_dir);
+    
+    int ret = rmdir(nome_dir);
+    if( ret != 0 ) perror("rmdir");
     return 0;
 }
 
 int comando_mudadir(char * nome_dir) {
 
-    chdir(nome_dir);
+    int ret = chdir(nome_dir);
+    if( ret != 0 ) perror("chdir");
     return 0;
 }
 
@@ -202,15 +205,15 @@ int lancar_programa(char * nome_prog, char * parametros) {
             // Executar outros programas
             if (pid == 0) {
                 if( isFound ){
-                    execlp(nome, nome, parametros);
+                    char *param = ( strlen(parametros) > 0 ) ? parametros : NULL; 
+                    execlp(nome, nome, param);
                 } else {
                     execv(nome_prog, NULL);
                 }
             } else {
                 waitpid(pid, &status, 0);
-                if( status > 0 ){ 
-                    // Corrigir o finalizar
-                    //printf("ERRO: o programa indicou termino com falha!\n");
+                if( WEXITSTATUS(status) == 1 ){
+                    printf("ERRO: o programa indicou termino com falha!\n");
                 }
             }
 
@@ -220,5 +223,3 @@ int lancar_programa(char * nome_prog, char * parametros) {
 
     return 1;
 }
-
-

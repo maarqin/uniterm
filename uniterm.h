@@ -36,7 +36,7 @@ void ler_comando(char * comando, char * parametros);
  * Se nao for nenhuma das situacoes anteriores, exibe uma mensagem de comando ou
  * programa desconhecido.
  */
-void executar_comando(char * comando, char * parametros);
+void executar_comando(char * comando, char *parametros);
 
 
 int comando_terminar();
@@ -46,7 +46,7 @@ int comando_novodir(char * nome_dir);
 int comando_apagadir(char * nome_dir);
 int comando_mudadir(char * nome_dir);
 
-int lancar_programa(char * nome_prog, char * parametros);
+int lancar_programa(char * nome_prog, char *parametros);
 
 struct dirent *arquivos();
 
